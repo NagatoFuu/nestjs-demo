@@ -240,7 +240,8 @@ AppModule
 → @Param 取得 "Nest"
 → Controller 调用 GreetingService.getHelloTo("Nest")
 → Service 调用注入的 Formatter
-→ Formatter 读取 options 组合字符串
+→ Service 将已注入的 options 传给 Formatter
+→ Formatter 根据传入的 options 组合字符串
 → Controller 返回 "Hello, Nest!"
 → HTTP 200 响应
 ```
@@ -393,4 +394,3 @@ GET /greetings/hello/Nest  → Hello, Nest!
 - 能说清四个测试层次为何不重复。
 - 能运行并解释两个问候接口。
 - 能完成检查题并订正薄弱点。
-
