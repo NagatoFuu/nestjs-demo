@@ -1,0 +1,2 @@
+export const GREETING_OPTIONS = Symbol('GREETING_OPTIONS');
+export const GREETING_FORMATTER = Symbol('GREETING_FORMATTER');
