@@ -80,4 +80,45 @@ describe('UserService', () => {
 
     expect(service.findOne(user.id).name).toBe('Carol');
   });
+
+  it('replaces every editable field while preserving the ID', () => {
+    expect(
+      service.replace('1', { name: 'New', email: 'new@example.com' }),
+    ).toEqual({
+      id: '1',
+      name: 'New',
+      email: 'new@example.com',
+    });
+    expect(service.findOne('1').email).toBe('new@example.com');
+  });
+
+  it('preserves fields omitted from a partial update', () => {
+    expect(service.update('1', { name: 'Renamed' })).toEqual({
+      id: '1',
+      name: 'Renamed',
+      email: 'alice@example.com',
+    });
+  });
+
+  it.each(['replace', 'update'] as const)(
+    '%s rejects an unknown ID',
+    (method) => {
+      expect(() =>
+        service[method]('999', { name: 'New', email: 'new@example.com' }),
+      ).toThrow(NotFoundException);
+    },
+  );
+
+  it.each(['replace', 'update'] as const)(
+    '%s returns a detached object',
+    (method) => {
+      const user = service[method]('1', {
+        name: 'New',
+        email: 'new@example.com',
+      });
+      user.name = 'External change';
+
+      expect(service.findOne('1').name).toBe('New');
+    },
+  );
 });

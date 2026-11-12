@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateUserInput } from './create-user.input';
+import type { ReplaceUserInput } from './replace-user.input';
+import type { UpdateUserInput } from './update-user.input';
 import type { User } from './user.interface';
 
 @Injectable()
@@ -33,6 +35,32 @@ export class UserService {
     };
 
     this.users.push(user);
+    return { ...user };
+  }
+
+  replace(id: string, input: ReplaceUserInput): User {
+    const user = this.users.find((user) => user.id === id);
+    if (!user) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+
+    user.name = input.name;
+    user.email = input.email;
+    return { ...user };
+  }
+
+  update(id: string, input: UpdateUserInput): User {
+    const user = this.users.find((user) => user.id === id);
+    if (!user) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+
+    if (input.name !== undefined) {
+      user.name = input.name;
+    }
+    if (input.email !== undefined) {
+      user.email = input.email;
+    }
     return { ...user };
   }
 }

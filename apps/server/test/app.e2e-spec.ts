@@ -104,6 +104,39 @@ describe('AppController (e2e)', () => {
     }
   });
 
+  it('/users/:id (PUT) replaces editable fields and persists the result', async () => {
+    const user = { id: '1', name: 'New', email: 'new@example.com' };
+    await request(app.getHttpServer())
+      .put('/users/1')
+      .send({ name: user.name, email: user.email })
+      .expect(200)
+      .expect(user);
+    await request(app.getHttpServer()).get('/users/1').expect(200).expect(user);
+  });
+
+  it('/users/:id (PATCH) preserves omitted fields', () => {
+    return request(app.getHttpServer())
+      .patch('/users/1')
+      .send({ name: 'Renamed' })
+      .expect(200)
+      .expect({ id: '1', name: 'Renamed', email: 'alice@example.com' });
+  });
+
+  it('/users/:id (PATCH) cannot change the ID or introduce extra fields', () => {
+    return request(app.getHttpServer())
+      .patch('/users/1')
+      .send({ id: '999', name: 'Renamed', role: 'admin' })
+      .expect(200)
+      .expect({ id: '1', name: 'Renamed', email: 'alice@example.com' });
+  });
+
+  it('/users/:id (PUT) does not create a missing resource', () => {
+    return request(app.getHttpServer())
+      .put('/users/999')
+      .send({ name: 'New', email: 'new@example.com' })
+      .expect(404);
+  });
+
   afterEach(async () => {
     await app.close();
   });

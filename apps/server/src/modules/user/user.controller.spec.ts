@@ -10,6 +10,8 @@ describe('UserController', () => {
   let findAll: jest.MockedFunction<UserService['findAll']>;
   let findOne: jest.MockedFunction<UserService['findOne']>;
   let create: jest.MockedFunction<UserService['create']>;
+  let replace: jest.MockedFunction<UserService['replace']>;
+  let update: jest.MockedFunction<UserService['update']>;
 
   const user: User = {
     id: 'user-42',
@@ -21,13 +23,17 @@ describe('UserController', () => {
     findAll = jest.fn().mockReturnValue([user]);
     findOne = jest.fn().mockReturnValue(user);
     create = jest.fn().mockReturnValue(user);
+    replace = jest.fn().mockReturnValue(user);
+    update = jest.fn().mockReturnValue(user);
 
     const userService: jest.Mocked<
-      Pick<UserService, 'findAll' | 'findOne' | 'create'>
+      Pick<UserService, 'findAll' | 'findOne' | 'create' | 'replace' | 'update'>
     > = {
       findAll,
       findOne,
       create,
+      replace,
+      update,
     };
 
     module = await Test.createTestingModule({
@@ -68,5 +74,17 @@ describe('UserController', () => {
 
     expect(controller.create(input)).toBe(user);
     expect(create).toHaveBeenCalledWith(input);
+  });
+
+  it('delegates full replacement with the route ID and body', () => {
+    const input = { name: 'New', email: 'new@example.com' };
+    expect(controller.replace('user-42', input)).toBe(user);
+    expect(replace).toHaveBeenCalledWith('user-42', input);
+  });
+
+  it('delegates partial updates with the route ID and body', () => {
+    const input = { name: 'Renamed' };
+    expect(controller.update('user-42', input)).toBe(user);
+    expect(update).toHaveBeenCalledWith('user-42', input);
   });
 });

@@ -1,5 +1,7 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import type { CreateUserInput } from './create-user.input';
+import type { ReplaceUserInput } from './replace-user.input';
+import type { UpdateUserInput } from './update-user.input';
 import type { User } from './user.interface';
 import { UserService } from './user.service';
 
@@ -20,5 +22,15 @@ export class UserController {
   @Post()
   create(@Body() input: CreateUserInput): User {
     return this.userService.create(input);
+  }
+
+  @Put(':id')
+  replace(@Param('id') id: string, @Body() input: ReplaceUserInput): User {
+    return this.userService.replace(id, input);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() input: UpdateUserInput): User {
+    return this.userService.update(id, input);
   }
 }
