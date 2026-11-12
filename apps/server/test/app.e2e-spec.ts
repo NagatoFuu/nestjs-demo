@@ -166,6 +166,50 @@ describe('AppController (e2e)', () => {
       .expect({ id: '3', name: 'Carol', email: 'carol@example.com' });
   });
 
+  it.each([{}, { name: 'Carol' }, { name: ' ', email: 'c@example.com' }, []])(
+    '/users (POST) returns 400 for invalid input: %p',
+    (input) => {
+      return request(app.getHttpServer())
+        .post('/users')
+        .send(input)
+        .expect(400);
+    },
+  );
+
+  it('/users/:id (PATCH) rejects all invalid fields before applying any update', async () => {
+    await request(app.getHttpServer())
+      .patch('/users/1')
+      .send({ name: 'Must not persist', email: 7 })
+      .expect(400);
+    await request(app.getHttpServer())
+      .get('/users/1')
+      .expect(200)
+      .expect({ id: '1', name: 'Alice', email: 'alice@example.com' });
+  });
+
+  it('/users/:id (PUT) rejects missing fields without changing data', async () => {
+    await request(app.getHttpServer())
+      .put('/users/1')
+      .send({ name: 'New' })
+      .expect(400);
+    await request(app.getHttpServer())
+      .get('/users/1')
+      .expect(200)
+      .expect({ id: '1', name: 'Alice', email: 'alice@example.com' });
+  });
+
+  it('/users/:id (PATCH) rejects an empty edit', () => {
+    return request(app.getHttpServer()).patch('/users/1').send({}).expect(400);
+  });
+
+  it('/users (POST) returns 400 for malformed JSON', () => {
+    return request(app.getHttpServer())
+      .post('/users')
+      .set('Content-Type', 'application/json')
+      .send('{"name":')
+      .expect(400);
+  });
+
   afterEach(async () => {
     await app.close();
   });

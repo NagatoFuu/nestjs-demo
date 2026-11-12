@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { CreateUserInput } from './create-user.input';
-import type { ReplaceUserInput } from './replace-user.input';
-import type { UpdateUserInput } from './update-user.input';
+import {
+  parsePartialUserFields,
+  parseRequiredUserFields,
+} from './user-input.validation';
 import type { User } from './user.interface';
 
 @Injectable()
@@ -18,48 +19,37 @@ export class UserService {
   }
 
   findOne(id: string): User {
-    const user = this.users.find((user) => user.id === id);
-
-    if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
-    }
-
-    return { ...user };
+    return { ...this.getStoredUser(id) };
   }
 
-  create(input: CreateUserInput): User {
+  create(input: unknown): User {
+    const fields = parseRequiredUserFields(input);
     const user: User = {
       id: String(this.nextId++),
-      name: input.name,
-      email: input.email,
+      name: fields.name,
+      email: fields.email,
     };
 
     this.users.push(user);
     return { ...user };
   }
 
-  replace(id: string, input: ReplaceUserInput): User {
-    const user = this.users.find((user) => user.id === id);
-    if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
-    }
-
-    user.name = input.name;
-    user.email = input.email;
+  replace(id: string, input: unknown): User {
+    const user = this.getStoredUser(id);
+    const fields = parseRequiredUserFields(input);
+    user.name = fields.name;
+    user.email = fields.email;
     return { ...user };
   }
 
-  update(id: string, input: UpdateUserInput): User {
-    const user = this.users.find((user) => user.id === id);
-    if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
+  update(id: string, input: unknown): User {
+    const user = this.getStoredUser(id);
+    const fields = parsePartialUserFields(input);
+    if (fields.name !== undefined) {
+      user.name = fields.name;
     }
-
-    if (input.name !== undefined) {
-      user.name = input.name;
-    }
-    if (input.email !== undefined) {
-      user.email = input.email;
+    if (fields.email !== undefined) {
+      user.email = fields.email;
     }
     return { ...user };
   }
@@ -71,5 +61,13 @@ export class UserService {
     }
 
     this.users.splice(index, 1);
+  }
+
+  private getStoredUser(id: string): User {
+    const user = this.users.find((user) => user.id === id);
+    if (!user) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+    return user;
   }
 }

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 
 describe('UserService', () => {
@@ -138,4 +138,24 @@ describe('UserService', () => {
       service.create({ name: 'Carol', email: 'carol@example.com' }).id,
     ).toBe('3');
   });
+  it('rejects an invalid creation before consuming an ID or changing data', () => {
+    expect(() => service.create({ name: 'Carol' })).toThrow(
+      BadRequestException,
+    );
+    expect(service.findAll()).toHaveLength(2);
+    expect(service.create({ name: 'Carol', email: 'c@example.com' }).id).toBe(
+      '3',
+    );
+  });
+
+  it.each(['replace', 'update'] as const)(
+    '%s validates all fields before mutating data',
+    (method) => {
+      const before = service.findOne('1');
+      expect(() =>
+        service[method]('1', { name: 'Must not persist', email: 7 }),
+      ).toThrow(BadRequestException);
+      expect(service.findOne('1')).toEqual(before);
+    },
+  );
 });
