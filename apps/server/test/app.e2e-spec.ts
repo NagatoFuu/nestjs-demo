@@ -70,6 +70,40 @@ describe('AppController (e2e)', () => {
     });
   });
 
+  it('/users (POST) creates a user that can be queried', async () => {
+    const user = { id: '3', name: 'Carol', email: 'carol@example.com' };
+
+    await request(app.getHttpServer())
+      .post('/users')
+      .send({ name: user.name, email: user.email })
+      .expect(201)
+      .expect(user);
+    await request(app.getHttpServer()).get('/users/3').expect(200).expect(user);
+  });
+
+  it('/users (POST) assigns the ID instead of trusting extra body fields', () => {
+    return request(app.getHttpServer())
+      .post('/users')
+      .send({
+        id: '999',
+        name: 'Carol',
+        email: 'carol@example.com',
+        role: 'admin',
+      })
+      .expect(201)
+      .expect({ id: '3', name: 'Carol', email: 'carol@example.com' });
+  });
+
+  it('/users (POST) assigns successive IDs inside the same application', async () => {
+    for (const id of ['3', '4']) {
+      await request(app.getHttpServer())
+        .post('/users')
+        .send({ name: 'Carol', email: 'carol@example.com' })
+        .expect(201)
+        .expect({ id, name: 'Carol', email: 'carol@example.com' });
+    }
+  });
+
   afterEach(async () => {
     await app.close();
   });

@@ -9,6 +9,7 @@ describe('UserController', () => {
   let controller: UserController;
   let findAll: jest.MockedFunction<UserService['findAll']>;
   let findOne: jest.MockedFunction<UserService['findOne']>;
+  let create: jest.MockedFunction<UserService['create']>;
 
   const user: User = {
     id: 'user-42',
@@ -19,10 +20,14 @@ describe('UserController', () => {
   beforeEach(async () => {
     findAll = jest.fn().mockReturnValue([user]);
     findOne = jest.fn().mockReturnValue(user);
+    create = jest.fn().mockReturnValue(user);
 
-    const userService: jest.Mocked<Pick<UserService, 'findAll' | 'findOne'>> = {
+    const userService: jest.Mocked<
+      Pick<UserService, 'findAll' | 'findOne' | 'create'>
+    > = {
       findAll,
       findOne,
+      create,
     };
 
     module = await Test.createTestingModule({
@@ -56,5 +61,12 @@ describe('UserController', () => {
 
     expect(() => controller.findOne('missing')).toThrow(error);
     expect(findOne).toHaveBeenCalledWith('missing');
+  });
+
+  it('passes the request body to UserService', () => {
+    const input = { name: 'Carol', email: 'carol@example.com' };
+
+    expect(controller.create(input)).toBe(user);
+    expect(create).toHaveBeenCalledWith(input);
   });
 });
