@@ -37,6 +37,39 @@ describe('AppController (e2e)', () => {
       .expect('Hello, Nest!');
   });
 
+  it('/users (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/users')
+      .expect(200)
+      .expect([
+        { id: '1', name: 'Alice', email: 'alice@example.com' },
+        { id: '2', name: 'Bob', email: 'bob@example.com' },
+      ]);
+  });
+
+  it('/users/:id (GET) returns the requested user', () => {
+    return request(app.getHttpServer())
+      .get('/users/2')
+      .expect(200)
+      .expect({ id: '2', name: 'Bob', email: 'bob@example.com' });
+  });
+
+  it('/users/:id (GET) returns 404 when the user does not exist', () => {
+    return request(app.getHttpServer()).get('/users/999').expect(404).expect({
+      message: 'User 999 not found',
+      error: 'Not Found',
+      statusCode: 404,
+    });
+  });
+
+  it('/users/:id (GET) preserves the string ID without numeric conversion', () => {
+    return request(app.getHttpServer()).get('/users/01').expect(404).expect({
+      message: 'User 01 not found',
+      error: 'Not Found',
+      statusCode: 404,
+    });
+  });
+
   afterEach(async () => {
     await app.close();
   });
