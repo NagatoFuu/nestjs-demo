@@ -1,11 +1,12 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { InMemoryUserRepository } from './in-memory-user.repository';
 import { UserService } from './user.service';
 
 describe('UserService', () => {
   let service: UserService;
 
   beforeEach(() => {
-    service = new UserService();
+    service = new UserService(new InMemoryUserRepository());
   });
 
   it('returns the initial users', () => {

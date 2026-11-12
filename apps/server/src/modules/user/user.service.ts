@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InMemoryUserRepository } from './in-memory-user.repository';
 import {
   parsePartialUserFields,
   parseRequiredUserFields,
@@ -7,64 +8,40 @@ import type { User } from './user.interface';
 
 @Injectable()
 export class UserService {
-  private readonly users: User[] = [
-    { id: '1', name: 'Alice', email: 'alice@example.com' },
-    { id: '2', name: 'Bob', email: 'bob@example.com' },
-  ];
-  private nextId = 3;
+  constructor(private readonly repository: InMemoryUserRepository) {}
 
   findAll(): User[] {
-    // Keep callers from mutating the in-memory store through returned references.
-    return this.users.map((user) => ({ ...user }));
+    return this.repository.findAll();
   }
 
   findOne(id: string): User {
-    return { ...this.getStoredUser(id) };
+    return this.requireUser(this.repository.findOne(id), id);
   }
 
   create(input: unknown): User {
     const fields = parseRequiredUserFields(input);
-    const user: User = {
-      id: String(this.nextId++),
-      name: fields.name,
-      email: fields.email,
-    };
-
-    this.users.push(user);
-    return { ...user };
+    return this.repository.create(fields);
   }
 
   replace(id: string, input: unknown): User {
-    const user = this.getStoredUser(id);
+    this.findOne(id);
     const fields = parseRequiredUserFields(input);
-    user.name = fields.name;
-    user.email = fields.email;
-    return { ...user };
+    return this.requireUser(this.repository.replace(id, fields), id);
   }
 
   update(id: string, input: unknown): User {
-    const user = this.getStoredUser(id);
+    this.findOne(id);
     const fields = parsePartialUserFields(input);
-    if (fields.name !== undefined) {
-      user.name = fields.name;
-    }
-    if (fields.email !== undefined) {
-      user.email = fields.email;
-    }
-    return { ...user };
+    return this.requireUser(this.repository.update(id, fields), id);
   }
 
   remove(id: string): void {
-    const index = this.users.findIndex((user) => user.id === id);
-    if (index === -1) {
+    if (!this.repository.remove(id)) {
       throw new NotFoundException(`User ${id} not found`);
     }
-
-    this.users.splice(index, 1);
   }
 
-  private getStoredUser(id: string): User {
-    const user = this.users.find((user) => user.id === id);
+  private requireUser(user: User | undefined, id: string): User {
     if (!user) {
       throw new NotFoundException(`User ${id} not found`);
     }
