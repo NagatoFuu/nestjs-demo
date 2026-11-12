@@ -121,4 +121,21 @@ describe('UserService', () => {
       expect(service.findOne('1').name).toBe('New');
     },
   );
+  it('removes only the requested user', () => {
+    service.remove('1');
+    expect(service.findAll().map((user) => user.id)).toEqual(['2']);
+    expect(() => service.findOne('1')).toThrow(NotFoundException);
+  });
+
+  it('does not delete another user when the requested ID is absent', () => {
+    expect(() => service.remove('999')).toThrow(NotFoundException);
+    expect(service.findAll().map((user) => user.id)).toEqual(['1', '2']);
+  });
+
+  it('does not reuse an ID after deletion', () => {
+    service.remove('2');
+    expect(
+      service.create({ name: 'Carol', email: 'carol@example.com' }).id,
+    ).toBe('3');
+  });
 });

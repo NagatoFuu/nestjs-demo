@@ -12,6 +12,7 @@ describe('UserController', () => {
   let create: jest.MockedFunction<UserService['create']>;
   let replace: jest.MockedFunction<UserService['replace']>;
   let update: jest.MockedFunction<UserService['update']>;
+  let remove: jest.MockedFunction<UserService['remove']>;
 
   const user: User = {
     id: 'user-42',
@@ -25,15 +26,20 @@ describe('UserController', () => {
     create = jest.fn().mockReturnValue(user);
     replace = jest.fn().mockReturnValue(user);
     update = jest.fn().mockReturnValue(user);
+    remove = jest.fn();
 
     const userService: jest.Mocked<
-      Pick<UserService, 'findAll' | 'findOne' | 'create' | 'replace' | 'update'>
+      Pick<
+        UserService,
+        'findAll' | 'findOne' | 'create' | 'replace' | 'update' | 'remove'
+      >
     > = {
       findAll,
       findOne,
       create,
       replace,
       update,
+      remove,
     };
 
     module = await Test.createTestingModule({
@@ -86,5 +92,9 @@ describe('UserController', () => {
     const input = { name: 'Renamed' };
     expect(controller.update('user-42', input)).toBe(user);
     expect(update).toHaveBeenCalledWith('user-42', input);
+  });
+  it('delegates deletion without returning a response object', () => {
+    expect(controller.remove('user-42')).toBeUndefined();
+    expect(remove).toHaveBeenCalledWith('user-42');
   });
 });

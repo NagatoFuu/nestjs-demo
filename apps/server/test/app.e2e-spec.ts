@@ -137,6 +137,35 @@ describe('AppController (e2e)', () => {
       .expect(404);
   });
 
+  it('/users/:id (DELETE) returns an empty 204 response and removes the user', async () => {
+    await request(app.getHttpServer())
+      .delete('/users/1')
+      .expect(204)
+      .expect('');
+    await request(app.getHttpServer()).get('/users/1').expect(404);
+  });
+
+  it('/users/:id (DELETE) returns 404 on repetition without removing another user', async () => {
+    await request(app.getHttpServer()).delete('/users/1').expect(204);
+    await request(app.getHttpServer()).delete('/users/1').expect(404);
+    await request(app.getHttpServer()).get('/users/2').expect(200);
+  });
+
+  it('/users (GET) returns 200 and an empty collection after all users are removed', async () => {
+    await request(app.getHttpServer()).delete('/users/1').expect(204);
+    await request(app.getHttpServer()).delete('/users/2').expect(204);
+    await request(app.getHttpServer()).get('/users').expect(200).expect([]);
+  });
+
+  it('/users (POST) does not reuse an ID after deletion', async () => {
+    await request(app.getHttpServer()).delete('/users/2').expect(204);
+    await request(app.getHttpServer())
+      .post('/users')
+      .send({ name: 'Carol', email: 'carol@example.com' })
+      .expect(201)
+      .expect({ id: '3', name: 'Carol', email: 'carol@example.com' });
+  });
+
   afterEach(async () => {
     await app.close();
   });

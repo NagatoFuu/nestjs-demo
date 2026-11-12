@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+} from '@nestjs/common';
 import type { CreateUserInput } from './create-user.input';
 import type { ReplaceUserInput } from './replace-user.input';
 import type { UpdateUserInput } from './update-user.input';
@@ -32,5 +43,11 @@ export class UserController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() input: UpdateUserInput): User {
     return this.userService.update(id, input);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id') id: string): void {
+    this.userService.remove(id);
   }
 }
